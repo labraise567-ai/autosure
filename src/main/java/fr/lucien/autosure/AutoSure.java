@@ -2,11 +2,11 @@ package fr.lucien.autosure;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket;
 
 import java.util.Optional;
 
@@ -17,14 +17,13 @@ public class AutoSure implements ClientModInitializer {
     public void onInitializeClient() {
         ClientReceiveMessageEvents.GAME.register((msg, overlay) -> handle(msg));
         ClientReceiveMessageEvents.CHAT.register((msg, sig, sender, params, ts) -> handle(msg));
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> say("mod actif"));
     }
 
     private static void say(String s) {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> {
             if (mc.player != null) {
-                               mc.gui.getChat().addClientSystemMessage(Component.literal("[AutoSure] " + s));
+                mc.gui.getChat().addClientSystemMessage(Component.literal("[AutoSure] " + s));
             }
         });
     }
@@ -34,14 +33,8 @@ public class AutoSure implements ClientModInitializer {
         if (text.startsWith("[autosure]")) return;
         long now = System.currentTimeMillis();
 
-        if (text.contains("hideyho")) {
+        if (text.contains("hideyho") && text.contains("how about it")) {
             armedUntil = now + 10000;
-            StringBuilder sb = new StringBuilder();
-            msg.visit((style, t) -> {
-                sb.append("{").append(t).append(" | ").append(style.getClickEvent()).append("} ");
-                return Optional.empty();
-            }, Style.EMPTY);
-            say("message détecté : " + sb);
         }
         if (now > armedUntil) return;
 
@@ -49,8 +42,16 @@ public class AutoSure implements ClientModInitializer {
         if (click == null) return;
         armedUntil = 0;
 
-        if (click instanceof ClickEvent.RunCommand rc) {
-            Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
+        if (click instanceof ClickEvent.Custom custom) {
+            mc.execute(() -> {
+                if (mc.player != null) {
+                    mc.player.connection.send(
+                        new ServerboundCustomClickActionPacket(custom.id(), custom.payload()));
+                }
+            });
+            say("clic envoyé");
+        } else if (click instanceof ClickEvent.RunCommand rc) {
             mc.execute(() -> {
                 if (mc.player != null) mc.player.connection.sendCommand(rc.command());
             });
