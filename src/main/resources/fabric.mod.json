@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "autosure",
+  "version": "${version}",
+  "name": "AutoSure",
+  "environment": "client",
+  "entrypoints": { "client": ["fr.lucien.autosure.AutoSure"] },
+  "depends": { "fabricloader": ">=0.16.10", "minecraft": "26.1.2", "java": ">=25", "fabric-api": "*" }
+}
