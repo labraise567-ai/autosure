@@ -24,7 +24,7 @@ public class AutoSure implements ClientModInitializer {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> {
             if (mc.player != null) {
-                mc.player.displayClientMessage(Component.literal("[AutoSure] " + s), false);
+                               mc.gui.getChat().addClientSystemMessage(Component.literal("[AutoSure] " + s));
             }
         });
     }
